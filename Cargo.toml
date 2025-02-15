@@ -1,7 +1,8 @@
 [package]
 name = "colorscheme"
-version = "0.1.0"
+version = "0.0.1"
 edition = "2024"
+readme = "README.md"
 
 [dependencies]
 colorsys = "0.6.7"
