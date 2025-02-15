@@ -52,6 +52,7 @@ impl Sub<f64> for Hue {
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum Scheme {
+    Column,
     Dyad,
     Triad,
     Tetrad,
@@ -96,6 +97,18 @@ impl ColorScheme {
         .into();
         Self(m)
     }
+    pub fn column(primary: Hsl) -> Self {
+        let lightness = primary.lightness();
+        let lighter = with_lightness(&primary, lightness * 1.5);
+        let darker = with_lightness(&primary, lightness * 0.5);
+        let m = [
+            ColorScheme::primary_variable(primary),
+            (String::from("--lighter"), lighter),
+            (String::from("--darker"), darker),
+        ]
+        .into();
+        Self(m)
+    }
     pub fn as_css(&self, selector: Option<&str>) -> String {
         let sel = selector.unwrap_or(":root");
         let mut s = format!("{} {{", sel);
@@ -115,9 +128,21 @@ impl ColorScheme {
 }
 
 fn rotate(color: &Hsl, by: Hue) -> Hsl {
-    let v = color.iter().collect::<Vec<f64>>();
-    let new_hue = by + v[0];
-    Hsl::new(new_hue.into(), v[1], v[2], v.get(3).copied())
+    let mut c = color.clone();
+    let new_hue = by + color.hue();
+    c.set_hue(new_hue.into());
+    c
+}
+
+fn with_saturation(color: &Hsl, new_saturation: f64) -> Hsl {
+    let mut c = color.clone();
+    c.set_saturation(new_saturation);
+    c
+}
+fn with_lightness(color: &Hsl, new_lightness: f64) -> Hsl {
+    let mut c = color.clone();
+    c.set_lightness(new_lightness);
+    c
 }
 fn hsl_to_css(h: &Hsl) -> String {
     colorsys::Rgb::from(h).to_hex_string()
