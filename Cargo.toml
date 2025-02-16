@@ -5,4 +5,6 @@ edition = "2024"
 readme = "README.md"
 
 [dependencies]
+clap = { version = "4.5.29", features = ["derive"] }
 colorsys = "0.6.7"
+css-named-colors = "1.0.1"
