@@ -26,8 +26,8 @@ impl ColorScheme {
         Self(m)
     }
     pub fn triad(primary: Hsl) -> Self {
-        let clockwise = rotate(&primary, 120.0.into());
-        let counterclockwise = rotate(&primary, (-120.0).into());
+        let clockwise = rotate(&primary, 120.0);
+        let counterclockwise = rotate(&primary, -120.0);
         let m = [
             ColorScheme::primary_variable(primary),
             (String::from("--clockwise"), clockwise),
@@ -37,7 +37,7 @@ impl ColorScheme {
         Self(m)
     }
     pub fn tetrad(primary: Hsl) -> Self {
-        let by: Hue = 90.0.into();
+        let by: f64 = 90.0;
         let upper_right = rotate(&primary, by);
         let lower_right = rotate(&upper_right, by);
         let lower_left = rotate(&lower_right, by);
@@ -80,9 +80,9 @@ impl ColorScheme {
     }
 }
 
-fn rotate(color: &Hsl, by: Hue) -> Hsl {
+fn rotate(color: &Hsl, by: f64) -> Hsl {
     let mut c = color.clone();
-    let new_hue = by + color.hue();
+    let new_hue = Hue::new(color.hue()) + by;
     c.set_hue(new_hue.into());
     c
 }
@@ -109,8 +109,8 @@ mod tests {
     }
     #[test]
     fn test_rotate() {
-        let o = Hsl::new(270.0, 50.0, 50.0, Some(1.0));
-        let by = Hue::new(91.0);
+        let o = _new_hsl(270.0);
+        let by = 91.0;
         let r = rotate(&o, by);
         assert_eq!(r.hue(), 1.0);
     }
