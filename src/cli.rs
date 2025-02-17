@@ -7,18 +7,24 @@ use css_named_colors::NamedColor;
 #[derive(Clone, Debug, PartialEq, Eq, ValueEnum)]
 pub enum CliScheme {
     /// lighter and darker variants of the same hue.    
-    /// variable names: `--primary`, `--lighter`, `--darker`
+    /// variable names: `--lighter`, `--darker`
     Column,
     /// the complementary color (180 degrees on the color wheel).    
-    /// variable names: `--primary`, `--complementary`
-    Dyad,
+    /// variable names: `--complementary`
+    Complementary,
     /// an isoceles triangle (120 degrees clockwise and counterclockwise).    
-    /// variable names: `--primary`, `--clockwise`, `--counterclockwise`
+    /// variable names: `--clockwise`, `--counterclockwise`
     Triad,
     /// a square with the primary color as the upper-left corner (90 degrees
     /// clockwise, 180 degrees clockwise, 90 degrees counterclockwise).    
-    /// variable names: `--primary`, `--upper-right`, `--lower-right`, `--lower-left`
+    /// variable names: `--upper-right`, `--lower-right`, `--lower-left`
     Tetrad,
+    /// a dark and saturated variant suitable for use as a font color.    
+    /// variable names: `--text-primary`
+    Text,
+    /// a light and desaturated variant for use as a background color.    
+    /// variable names: `--background-primary`
+    Background,
 }
 
 /// cli arguments
@@ -61,9 +67,11 @@ impl Args {
     fn to_scheme(cli_scheme: &CliScheme) -> Scheme {
         match cli_scheme {
             CliScheme::Column => Scheme::Column,
-            CliScheme::Dyad => Scheme::Dyad,
+            CliScheme::Complementary => Scheme::Complementary,
             CliScheme::Triad => Scheme::Triad,
             CliScheme::Tetrad => Scheme::Tetrad,
+            CliScheme::Text => Scheme::Text,
+            CliScheme::Background => Scheme::Background,
         }
     }
     /// try to parse the provided input as either a hex string or CSS color name

@@ -11,18 +11,24 @@ use std::fmt::Write;
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum Scheme {
     /// lighter and darker variants of the same hue    
-    /// variable names: `--primary`, `--lighter`, `--darker`
+    /// variable names: `--lighter`, `--darker`
     Column,
     /// the complementary color (180 degrees on the color wheel)    
-    /// variable names: `--primary`, `--complementary`
-    Dyad,
+    /// variable names: `--complementary`
+    Complementary,
     /// an isoceles triangle (120 degrees clockwise and counterclockwise)    
-    /// variable names: `--primary`, `--clockwise`, `--counterclockwise`
+    /// variable names: `--clockwise`, `--counterclockwise`
     Triad,
     /// a square with the primary color as the upper-left corner (90 degrees
     /// clockwise, 180 degrees clockwise, 90 degrees counterclockwise)    
-    /// variable names: `--primary`, `--upper-right`, `--lower-right`, `--lower-left`
+    /// variable names: `--upper-right`, `--lower-right`, `--lower-left`
     Tetrad,
+    /// a dark and saturated variant suitable for use as a font color
+    /// variable names: `--text-primary`
+    Text,
+    /// a light and desaturated variant for use as a background color
+    /// variable names: `--background-primary`
+    Background,
 }
 
 type ColorVar = (&'static str, Hsl);
@@ -56,9 +62,11 @@ impl ColorScheme {
     fn colors(primary: &Hsl, scheme: Scheme) -> Vec<ColorVar> {
         match scheme {
             Scheme::Column => Self::column(primary),
-            Scheme::Dyad => Self::dyad(primary),
+            Scheme::Complementary => Self::complementary(primary),
             Scheme::Triad => Self::triad(primary),
             Scheme::Tetrad => Self::tetrad(primary),
+            Scheme::Text => Self::text(primary),
+            Scheme::Background => Self::background(primary),
         }
     }
     /// serialize the scheme to CSS variables defined under the provided selector or `:root`
@@ -80,7 +88,7 @@ impl ColorScheme {
         let darker = with_lightness(primary, lightness * 0.5);
         vec![("--lighter", lighter), ("--darker", darker)]
     }
-    fn dyad(primary: &Hsl) -> Vec<ColorVar> {
+    fn complementary(primary: &Hsl) -> Vec<ColorVar> {
         let complementary = rotate(primary, 180.0);
         vec![("--complementary", complementary)]
     }
@@ -103,6 +111,16 @@ impl ColorScheme {
             ("--lower-left", lower_left),
         ]
     }
+    fn text(primary: &Hsl) -> Vec<ColorVar> {
+        let text_primary = with_saturation(primary, 0.75);
+        let text_primary = with_lightness(&text_primary, 0.125);
+        vec![("--text-primary", text_primary)]
+    }
+    fn background(primary: &Hsl) -> Vec<ColorVar> {
+        let background_primary = with_saturation(primary, 0.25);
+        let background_primary = with_lightness(&background_primary, 0.875);
+        vec![("--background-primary", background_primary)]
+    }
 }
 
 fn rotate(color: &Hsl, by: f64) -> Hsl {
@@ -112,7 +130,6 @@ fn rotate(color: &Hsl, by: f64) -> Hsl {
     c
 }
 
-#[allow(dead_code)]
 // not used yet, maybe for e.g. pastelization
 fn with_saturation(color: &Hsl, new_saturation: f64) -> Hsl {
     let mut c = color.clone();
@@ -142,12 +159,12 @@ mod tests {
         assert_eq!(r.hue(), 1.0);
     }
     #[test]
-    fn test_dyad() {
+    fn test_complementary() {
         let primary: f64 = 90.0;
         let expected_complementary: f64 = 270.0;
         let expected: Vec<ColorVar> = vec![("--complementary", _new_hsl(expected_complementary))];
-        let dyad = ColorScheme::dyad(&_new_hsl(primary));
-        assert_eq!(dyad, expected);
+        let complementary = ColorScheme::complementary(&_new_hsl(primary));
+        assert_eq!(complementary, expected);
     }
     #[test]
     fn test_triad() {
@@ -186,7 +203,7 @@ mod tests {
         let primary = _new_hsl(0.0);
         let expected =
             String::from(":root {\n\t--primary: #ff0000;\n\t--complementary: #00ffff;\n};");
-        let dyad = ColorScheme::new(primary, Scheme::Dyad);
+        let dyad = ColorScheme::new(primary, Scheme::Complementary);
         let actual = dyad.as_css(None);
         assert_eq!(actual, expected);
     }
