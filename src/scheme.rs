@@ -1,22 +1,67 @@
+//! # color scheme generation
 use crate::hue::Hue;
 use colorsys::Hsl;
 use std::collections::BTreeMap;
 use std::fmt::Write;
 
+/// color scheme variants    
+///
+/// it may be worth referring to [a
+/// diagram of HSL](https://en.wikipedia.org/wiki/HSL_and_HSV#/media/File:HSL_color_solid_cylinder_saturation_gray.png)    
+/// schemes primarily affect hue while preserving saturation and lightness except where noted
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum Scheme {
+    /// lighter and darker variants of the same hue
     Column,
+    /// the complementary color (180 degrees on the color wheel)
     Dyad,
+    /// an isoceles triangle (120 degrees clockwise and counterclockwise)
     Triad,
+    /// a square with the primary color as the upper-left corner (90 degrees
+    /// clockwise, 180 degrees clockwise, 90 degrees counterclockwise)
     Tetrad,
 }
 
+/// a colorscheme with a primary color and one or more additional colors
 #[repr(transparent)]
 #[derive(Debug, Clone, PartialEq)]
 pub struct ColorScheme(BTreeMap<String, Hsl>);
 
 impl ColorScheme {
-    pub fn dyad(primary: Hsl) -> Self {
+    /// create a colorscheme from a primary color and scheme variant
+    pub fn new(primary: Hsl, scheme: Scheme) -> Self {
+        match scheme {
+            Scheme::Column => Self::column(primary),
+            Scheme::Dyad => Self::dyad(primary),
+            Scheme::Triad => Self::triad(primary),
+            Scheme::Tetrad => Self::tetrad(primary),
+        }
+    }
+    /// serialize the scheme to CSS variables defined under the provided selector or `:root`
+    ///
+    /// all colors are converted to RGB hex strings
+    pub fn as_css(&self, selector: Option<&str>) -> String {
+        let sel = selector.unwrap_or(":root");
+        let mut s = format!("{} {{", sel);
+        for (var_name, color) in self.0.iter() {
+            write!(s, "\n\t{}: {};", var_name, hsl_to_css(color)).unwrap();
+        }
+        write!(s, "\n}};").unwrap();
+        s
+    }
+    fn column(primary: Hsl) -> Self {
+        let lightness = primary.lightness();
+        let lighter = with_lightness(&primary, lightness * 1.5);
+        let darker = with_lightness(&primary, lightness * 0.5);
+        let m = [
+            ColorScheme::primary_variable(primary),
+            (String::from("--lighter"), lighter),
+            (String::from("--darker"), darker),
+        ]
+        .into();
+        Self(m)
+    }
+    fn dyad(primary: Hsl) -> Self {
         let complementary = rotate(&primary, 180.0.into());
         let m: BTreeMap<String, Hsl> = [
             ColorScheme::primary_variable(primary),
@@ -50,27 +95,6 @@ impl ColorScheme {
         .into();
         Self(m)
     }
-    pub fn column(primary: Hsl) -> Self {
-        let lightness = primary.lightness();
-        let lighter = with_lightness(&primary, lightness * 1.5);
-        let darker = with_lightness(&primary, lightness * 0.5);
-        let m = [
-            ColorScheme::primary_variable(primary),
-            (String::from("--lighter"), lighter),
-            (String::from("--darker"), darker),
-        ]
-        .into();
-        Self(m)
-    }
-    pub fn as_css(&self, selector: Option<&str>) -> String {
-        let sel = selector.unwrap_or(":root");
-        let mut s = format!("{} {{", sel);
-        for (var_name, color) in self.0.iter() {
-            write!(s, "\n\t{}: {};", var_name, hsl_to_css(color)).unwrap();
-        }
-        write!(s, "\n}};").unwrap();
-        s
-    }
     fn primary_variable(primary: Hsl) -> (String, Hsl) {
         (String::from("--primary"), primary)
     }
@@ -87,6 +111,8 @@ fn rotate(color: &Hsl, by: f64) -> Hsl {
     c
 }
 
+#[allow(dead_code)]
+// not used yet, maybe for e.g. pastelization
 fn with_saturation(color: &Hsl, new_saturation: f64) -> Hsl {
     let mut c = color.clone();
     c.set_saturation(new_saturation);

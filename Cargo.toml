@@ -3,6 +3,7 @@ name = "colorscheme"
 version = "0.0.1"
 edition = "2024"
 readme = "README.md"
+description = "CLI tool to generate CSS colorschemes"
 
 [dependencies]
 clap = { version = "4.5.29", features = ["derive"] }

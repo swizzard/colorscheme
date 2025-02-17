@@ -1,3 +1,17 @@
+//! # [`Hue`] newtype - [`f64`] with modulo 360 addition and subtraction
+//!
+//! [`colorsys::Hsl`] clamps hue values to be between `0.0` and `360.0`,
+//! so naively adding or subtracting won't do what we want
+
+/// newtype around [`f64`] with modulo 360 addition and subtraction
+///
+/// ```
+/// let h = Hue::new(180.0);
+/// let more = h + 280.0;
+/// assert_eq!(more.into(), 100.0);
+/// let less = h - 300.0;
+/// assert_eq!(less.into(), 240.0)
+/// ```
 #[repr(transparent)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
 pub struct Hue(f64);
@@ -18,6 +32,8 @@ impl Hue {
     fn wrapped(n: f64) -> Self {
         Self(Self::wrap(n))
     }
+    /// creates a new [`Hue`] value    
+    /// NB: clamps instead of wrapping
     pub fn new(n: f64) -> Self {
         Self(Self::clamp(n))
     }
@@ -25,7 +41,7 @@ impl Hue {
 
 impl From<f64> for Hue {
     fn from(value: f64) -> Self {
-        Self(Self::clamp(value))
+        Self::new(value)
     }
 }
 
