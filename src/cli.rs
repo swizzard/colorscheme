@@ -6,13 +6,18 @@ use css_named_colors::NamedColor;
 /// cli-facing equivalent of [`crate::scheme::Scheme`]
 #[derive(Clone, Debug, PartialEq, Eq, ValueEnum)]
 pub enum CliScheme {
-    /// lighter and darker variants of the same hue
+    /// lighter and darker variants of the same hue.    
+    /// variable names: `--primary`, `--lighter`, `--darker`
     Column,
-    /// complementary color (180 degrees on the color wheel)
+    /// the complementary color (180 degrees on the color wheel).    
+    /// variable names: `--primary`, `--complementary`
     Dyad,
-    /// an isoceles triangle (120 degrees clockwise and counterclockwise)
+    /// an isoceles triangle (120 degrees clockwise and counterclockwise).    
+    /// variable names: `--primary`, `--clockwise`, `--counterclockwise`
     Triad,
-    /// a square with the primary color as the upper-left corner (90 degrees clockwise, 180 degrees clockwise, 90 degrees counterclockwise)
+    /// a square with the primary color as the upper-left corner (90 degrees
+    /// clockwise, 180 degrees clockwise, 90 degrees counterclockwise).    
+    /// variable names: `--primary`, `--upper-right`, `--lower-right`, `--lower-left`
     Tetrad,
 }
 
@@ -21,19 +26,20 @@ pub enum CliScheme {
 #[command(version, about, long_about = None)]
 pub struct Args {
     #[arg(
-        short = 's',
-        long = "scheme",
-        help = "color scheme to generate",
-        value_name = "SCHEME"
-    )]
-    cli_scheme: CliScheme,
-    #[arg(
         short,
         long = "primary",
         help = "primary scheme color (hex value or CSS color name)",
         value_name = "PRIMARY COLOR"
     )]
     primary_str: String,
+    #[arg(
+        short = 's',
+        long = "scheme",
+        help = "color schemes to generate",
+        value_name = "SCHEME",
+        required = true
+    )]
+    cli_schemes: Vec<CliScheme>,
     #[arg(
         short = 'e',
         long = "selector",
@@ -48,9 +54,12 @@ impl Args {
     pub fn primary(&self) -> Option<colorsys::Hsl> {
         Args::parse_primary(&self.primary_str)
     }
+    pub fn schemes(&self) -> Vec<Scheme> {
+        self.cli_schemes.iter().map(Args::to_scheme).collect()
+    }
     /// convert from [`CliScheme`] to [`Scheme`]
-    pub fn scheme(&self) -> Scheme {
-        match self.cli_scheme {
+    fn to_scheme(cli_scheme: &CliScheme) -> Scheme {
+        match cli_scheme {
             CliScheme::Column => Scheme::Column,
             CliScheme::Dyad => Scheme::Dyad,
             CliScheme::Triad => Scheme::Triad,
