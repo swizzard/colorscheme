@@ -6,11 +6,12 @@
 /// newtype around [`f64`] with modulo 360 addition and subtraction
 ///
 /// ```
+/// # use colorscheme::hue::Hue;
 /// let h = Hue::new(180.0);
 /// let more = h + 280.0;
-/// assert_eq!(more.into(), 100.0);
+/// assert_eq!(f64::from(more), 100.0);
 /// let less = h - 300.0;
-/// assert_eq!(less.into(), 240.0)
+/// assert_eq!(f64::from(less), 240.0)
 /// ```
 #[repr(transparent)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]

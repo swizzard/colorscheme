@@ -62,7 +62,7 @@ impl ColorScheme {
         Self(m)
     }
     fn dyad(primary: Hsl) -> Self {
-        let complementary = rotate(&primary, 180.0.into());
+        let complementary = rotate(&primary, 180.0);
         let m: BTreeMap<String, Hsl> = [
             ColorScheme::primary_variable(primary),
             (String::from("--complementary"), complementary),
