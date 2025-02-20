@@ -112,13 +112,13 @@ impl ColorScheme {
         ]
     }
     fn text(primary: &Hsl) -> Vec<ColorVar> {
-        let text_primary = with_saturation(primary, 0.75);
-        let text_primary = with_lightness(&text_primary, 0.125);
+        let text_primary = with_saturation(primary, 75.0);
+        let text_primary = with_lightness(&text_primary, 12.5);
         vec![("--text-primary", text_primary)]
     }
     fn background(primary: &Hsl) -> Vec<ColorVar> {
-        let background_primary = with_saturation(primary, 0.25);
-        let background_primary = with_lightness(&background_primary, 0.875);
+        let background_primary = with_saturation(primary, 25.0);
+        let background_primary = with_lightness(&background_primary, 87.5);
         vec![("--background-primary", background_primary)]
     }
 }
@@ -191,6 +191,32 @@ mod tests {
         ];
         let tetrad = ColorScheme::tetrad(&_new_hsl(primary));
         assert_eq!(tetrad, expected);
+    }
+    #[test]
+    fn test_text() {
+        let primary_hue: f64 = 90.0;
+        let primary = Hsl::new(primary_hue, 50.0, 50.0, Some(1.0));
+        let expected_saturation: f64 = 75.0;
+        let expected_lightness: f64 = 12.5;
+        let expected_label = "--text-primary";
+        let (actual_label, actual_hue) = &ColorScheme::text(&primary)[0];
+        assert_eq!(actual_label, &expected_label, "label");
+        assert_eq!(actual_hue.hue(), primary_hue, "hue");
+        assert_eq!(actual_hue.saturation(), expected_saturation, "saturation");
+        assert_eq!(actual_hue.lightness(), expected_lightness, "lightness");
+    }
+    #[test]
+    fn test_background() {
+        let primary_hue: f64 = 90.0;
+        let primary = Hsl::new(primary_hue, 50.0, 50.0, Some(1.0));
+        let expected_saturation: f64 = 25.0;
+        let expected_lightness: f64 = 87.5;
+        let expected_label = "--background-primary";
+        let (actual_label, actual_hue) = &ColorScheme::background(&primary)[0];
+        assert_eq!(actual_label, &expected_label, "label");
+        assert_eq!(actual_hue.hue(), primary_hue, "hue");
+        assert_eq!(actual_hue.saturation(), expected_saturation, "saturation");
+        assert_eq!(actual_hue.lightness(), expected_lightness, "lightness");
     }
     #[test]
     fn test_hsl_to_css() {
