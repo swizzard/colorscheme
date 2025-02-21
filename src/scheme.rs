@@ -16,6 +16,9 @@ pub enum Scheme {
     /// the complementary color (180 degrees on the color wheel)    
     /// variable names: `--complementary`
     Complementary,
+    /// diagonal complementary (180 degrees on the color wheel, inverted saturation and lightness)
+    /// variable names: `--diagonal-complementary`
+    DiagonalComplementary,
     /// an isoceles triangle (120 degrees clockwise and counterclockwise)    
     /// variable names: `--clockwise`, `--counterclockwise`
     Triad,
@@ -63,6 +66,7 @@ impl ColorScheme {
         match scheme {
             Scheme::Column => Self::column(primary),
             Scheme::Complementary => Self::complementary(primary),
+            Scheme::DiagonalComplementary => Self::diagonal_complementary(primary),
             Scheme::Triad => Self::triad(primary),
             Scheme::Tetrad => Self::tetrad(primary),
             Scheme::Text => Self::text(primary),
@@ -91,6 +95,14 @@ impl ColorScheme {
     fn complementary(primary: &Hsl) -> Vec<ColorVar> {
         let complementary = rotate(primary, 180.0);
         vec![("--complementary", complementary)]
+    }
+    fn diagonal_complementary(primary: &Hsl) -> Vec<ColorVar> {
+        let new_saturation = invert(primary.saturation());
+        let new_lightness = invert(primary.lightness());
+        let diagonal_complementary = rotate(primary, 180.0);
+        let diagonal_complementary = with_saturation(&diagonal_complementary, new_saturation);
+        let diagonal_complementary = with_lightness(&diagonal_complementary, new_lightness);
+        vec![("--diagonal-complementary", diagonal_complementary)]
     }
     fn triad(primary: &Hsl) -> Vec<ColorVar> {
         let clockwise = rotate(primary, 120.0);
@@ -141,6 +153,16 @@ fn with_lightness(color: &Hsl, new_lightness: f64) -> Hsl {
     c.set_lightness(new_lightness);
     c
 }
+
+fn invert(val: f64) -> f64 {
+    if val > 100.0 {
+        0.0
+    } else if val < 0.0 {
+        100.0
+    } else {
+        100.0 - val
+    }
+}
 fn hsl_to_css(h: &Hsl) -> String {
     colorsys::Rgb::from(h).to_hex_string()
 }
@@ -159,12 +181,26 @@ mod tests {
         assert_eq!(r.hue(), 1.0);
     }
     #[test]
+    fn test_invert() {
+        assert_eq!(10.0, invert(90.0));
+        assert_eq!(77.5, invert(22.5));
+    }
+    #[test]
     fn test_complementary() {
         let primary: f64 = 90.0;
         let expected_complementary: f64 = 270.0;
         let expected: Vec<ColorVar> = vec![("--complementary", _new_hsl(expected_complementary))];
         let complementary = ColorScheme::complementary(&_new_hsl(primary));
         assert_eq!(complementary, expected);
+    }
+    #[test]
+    fn test_diagonal_complementary() {
+        let primary_hue: f64 = 90.0;
+        let primary = Hsl::new(primary_hue, 20.0, 30.0, Some(1.0));
+        let expected_hsl = Hsl::new(270.0, 80.0, 70.0, Some(1.0));
+        let expected = vec![("--diagonal-complementary", expected_hsl)];
+        let actual = ColorScheme::diagonal_complementary(&primary);
+        assert_eq!(actual, expected);
     }
     #[test]
     fn test_triad() {
@@ -196,27 +232,19 @@ mod tests {
     fn test_text() {
         let primary_hue: f64 = 90.0;
         let primary = Hsl::new(primary_hue, 50.0, 50.0, Some(1.0));
-        let expected_saturation: f64 = 75.0;
-        let expected_lightness: f64 = 12.5;
-        let expected_label = "--text-primary";
-        let (actual_label, actual_hue) = &ColorScheme::text(&primary)[0];
-        assert_eq!(actual_label, &expected_label, "label");
-        assert_eq!(actual_hue.hue(), primary_hue, "hue");
-        assert_eq!(actual_hue.saturation(), expected_saturation, "saturation");
-        assert_eq!(actual_hue.lightness(), expected_lightness, "lightness");
+        let expected_hsl = Hsl::new(primary_hue, 75.0, 12.5, Some(1.0));
+        let expected = vec![("--text-primary", expected_hsl)];
+        let actual = ColorScheme::text(&primary);
+        assert_eq!(actual, expected);
     }
     #[test]
     fn test_background() {
         let primary_hue: f64 = 90.0;
         let primary = Hsl::new(primary_hue, 50.0, 50.0, Some(1.0));
-        let expected_saturation: f64 = 25.0;
-        let expected_lightness: f64 = 87.5;
-        let expected_label = "--background-primary";
-        let (actual_label, actual_hue) = &ColorScheme::background(&primary)[0];
-        assert_eq!(actual_label, &expected_label, "label");
-        assert_eq!(actual_hue.hue(), primary_hue, "hue");
-        assert_eq!(actual_hue.saturation(), expected_saturation, "saturation");
-        assert_eq!(actual_hue.lightness(), expected_lightness, "lightness");
+        let expected_hsl = Hsl::new(primary_hue, 25.0, 87.5, Some(1.0));
+        let expected = vec![("--background-primary", expected_hsl)];
+        let actual = ColorScheme::background(&primary);
+        assert_eq!(actual, expected);
     }
     #[test]
     fn test_hsl_to_css() {

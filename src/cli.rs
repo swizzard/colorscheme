@@ -12,6 +12,9 @@ pub enum CliScheme {
     /// the complementary color (180 degrees on the color wheel).    
     /// variable names: `--complementary`
     Complementary,
+    /// diagonal complementary (180 degrees on the color wheel, inverted saturation and lightness)
+    /// variable names: `--diagonal-complementary`
+    DiagonalComplementary,
     /// an isoceles triangle (120 degrees clockwise and counterclockwise).    
     /// variable names: `--clockwise`, `--counterclockwise`
     Triad,
@@ -68,6 +71,7 @@ impl Args {
         match cli_scheme {
             CliScheme::Column => Scheme::Column,
             CliScheme::Complementary => Scheme::Complementary,
+            CliScheme::DiagonalComplementary => Scheme::DiagonalComplementary,
             CliScheme::Triad => Scheme::Triad,
             CliScheme::Tetrad => Scheme::Tetrad,
             CliScheme::Text => Scheme::Text,
