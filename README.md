@@ -40,7 +40,9 @@ $ colorscheme -s column -p rebeccapurple
 ### TODO
 
 - [ ] more schemes
-  - [ ] colorblind-compatibile?
+  - [ ] colorblind-compatible?
+  - [ ] `mod 100` wrapping type for saturation & lightness
 - flexibility
-  - [ ] composability
-  - [ ] "mixins" (suitable for fonts e.g.)
+  - [x] composability
+  - [x] "mixins" (suitable for fonts e.g.)
+  - [ ] variable name flexibility or scopes or something?
